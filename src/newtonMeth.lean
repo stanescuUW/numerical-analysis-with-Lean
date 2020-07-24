@@ -1,36 +1,23 @@
 import data.real.basic
-import analysis.normed_space.basic
 import tactic.basic
 import analysis.specific_limits
 import .uwyo_sqrt2
 
 noncomputable theory
-open_locale classical topological_space
-
-open function filter metric
-
-open_locale big_operators
-
-open nat
+open_locale classical topological_space 
+open filter 
 
 -- For examples, see mathlib/src/analysis/specific_limits.lean
-
-
 -- Main business:
 --noncomputable theory (probably needed if using ℝ instead of ℚ)
 
--- trying with a sequence of rationals first
-
+-- Working first with a sequence of rationals for the approximations themselves
 def x : ℕ → ℚ
 | 0     := (2 : ℚ)
 | (n+1) := ( x n * x n + 2) / ( 2 * x n)
-
+-- Now pretend otherwise
 def s (n : ℕ) : ℝ := real.sqrt 2 - x n
 
--- could put `noncomputable` in front of next definition
-def xR : ℕ → ℝ
-| 0     := (2 : ℝ)
-| (n+1) := ( x n * x n + 2) / ( 2 * x n)
 
 lemma newton_seq_positive : ∀ n : ℕ, 0 < x n :=
 begin
@@ -142,7 +129,7 @@ begin
     have h0 : x 0 =2 , refl,
     rw h0, linarith,
   },
-  { -- induction step
+  { -- induction step, kind of ugly so far
     have h1 : x d.succ = ( x d * x d + 2) / ( 2 * x d), refl,
     rw h1,
     have H := newton_seq_positive d,
@@ -217,7 +204,7 @@ end
 
 theorem sqrt_sub_newton_bounded_above : ∀ n : ℕ, s n < (0 : ℝ) :=
 begin
-  sorry,
+  sorry, -- this should be easy
 end
 
 theorem sqrt_sub_newton_tendsto_zero : tendsto s at_top (𝓝 (0:ℝ)) :=
