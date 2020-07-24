@@ -115,31 +115,90 @@ begin
   done
 end
 
-theorem sqrt_sub_newton_bounded_above : ∀ n : ℕ, s n < (0 : ℝ) :=
+theorem sqrt_sub_newton_below_zero : ∀ n : ℕ, s n < (0 : ℝ) :=
 begin
-  sorry, -- this should be easy
+  unfold s,
+  intro n,
+  rw sub_lt, rw sub_zero,
+  have h1 := newton_seq_bounded_below n,
+  have h2 := newton_seq_positive n,
+  set X := x n with hX,
+  have h3 : 0 ≤ (2 : ℝ), linarith,
+  have h4 : 0 ≤ X, linarith,
+  have h41 : 0 ≤ ((X * X) : ℝ), nlinarith,
+  have h42 : 2 < ((X * X) : ℝ), norm_cast, exact h1,
+  have h5 := (real.sqrt_lt h3 h41).mpr h42,
+  rw ← pow_two at h5,
+  rw real.sqrt_sqr at h5, exact h5,
+  norm_cast, exact h4,
 end
 
-theorem sqrt_sub_newton_tendsto_finite_limit : ∃ L : ℝ, tendsto s at_top (𝓝 L) :=
+lemma sqrt_sub_newton_range_subset : set.range s ⊆ set.Iic (0:ℝ) :=
+begin
+  unfold set.range,
+  have h := sqrt_sub_newton_below_zero,
+  intros x hx,
+  cases hx with m hm,
+  have h1 := h m,
+  rw hm at h1,
+  rw set.mem_Iic,
+  linarith,
+end
+
+theorem sqrt_sub_newton_bounded_above : bdd_above (set.range s) :=
+begin
+  have h1 := sqrt_sub_newton_range_subset,
+  have h2 : ∃ a : ℝ, (set.range s) ⊆ set.Iic a,
+    use [0, h1],
+  exact bdd_above_iff_subset_Iic.mpr h2,
+end
+
+theorem sqrt_sub_newton_tendsto_finite_limit : ∃ L0 : ℝ, tendsto s at_top (𝓝 L0) :=
 begin
   have h1 := tendsto_of_monotone sqrt_sub_newton_monotone,
   cases h1 with hf ht,
-  unfold tendsto at hf,
-  have h2 := sqrt_sub_newton_bounded_above,
-  unfold at_top at hf,
+  have h2 := unbounded_of_tendsto_at_top hf,
+  have h3 := sqrt_sub_newton_bounded_above,
   exfalso,  -- this sequence doesn't go to infinity; it is bounded above
-  sorry,
+  exact h2 h3,
   exact ht, done
+end
+
+-- This is the sequence of Newton approximations, viewed as real numbers
+def xR (n : ℕ) : ℝ := real.sqrt 2 - s n
+-- We can actually prove `xR` and `x` generate the same values
+theorem xR_same_as_x (n : ℕ) : ((x n): ℝ) = xR n := 
+begin
+  have h1 : xR n = real.sqrt 2 - s n, refl,
+  have h2 : s n = real.sqrt 2 - x n, refl,
+  rw h2 at h1,
+  have h3 : real.sqrt 2 - (real.sqrt 2 - ↑(x n)) = ↑(x n),
+    linarith,
+  rw h3 at h1, 
+  exact h1.symm, done
+end
+
+-- And this sequence does have a finite limit:
+theorem newton_tendsto_finite_limit_v2 : ∃ L : ℝ, tendsto xR at_top (𝓝 L) :=
+begin
+  have h1 := sqrt_sub_newton_tendsto_finite_limit,
+  cases h1 with l0 hl0,
+  use real.sqrt 2 - l0,
+  apply tendsto.sub,
+  exact tendsto_const_nhds,
+  exact hl0,
 end
 
 -- I can try proving that `(x n) → sqrt 2` or alternately `s n → 0`
 -- There might be an advantage in working with `x n` if I can apply limit operations
 theorem sqrt_sub_newton_tendsto_zero : tendsto s at_top (𝓝 (0:ℝ)) :=
 begin
+  have h1 := sqrt_sub_newton_tendsto_finite_limit,
+  rw (show (0 : ℝ) = real.sqrt 2 - real.sqrt 2, by simp),
+  apply tendsto.sub,
+  apply tendsto_const_nhds,
+  cases h1 with L hL,
+  unfold tendsto,
   sorry,
+  --dsimp s at hL,
 end
-
-example (s : ℕ → ℝ) (h : ∃ L : ℝ, ∀ n : ℕ, s n < L) : ¬ (tendsto s at_top at_top) := sorry
-#check (false_iff (tendsto s at_top at_top)).mp 
-#check not_ball
-#check set.not_subset
