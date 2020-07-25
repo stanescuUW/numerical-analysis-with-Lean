@@ -1,6 +1,7 @@
 import tactic.basic
 import analysis.specific_limits
 import uwyo_aux
+import analysis.calculus.local_extr
 
 noncomputable theory
 open_locale classical topological_space 
@@ -164,6 +165,28 @@ begin
   exact ht, done
 end
 
+theorem sqrt_sub_newton_tendsto_finite_limit_v1 : ∃ L0 : ℝ, tendsto s at_top (𝓝 L0) :=
+begin
+  have h1 := tendsto_of_monotone sqrt_sub_newton_monotone,
+  cases h1 with hf ht,
+  have h2 := unbounded_of_tendsto_at_top hf,
+  have h3 := sqrt_sub_newton_bounded_above,
+  exfalso,  -- this sequence doesn't go to infinity; it is bounded above
+  exact h2 h3,
+  exact ht, done
+end
+
+-- This is due to Yuri Kudryashov
+example (s : ℕ → ℝ) (L : ℝ) (h : ∀ n : ℕ, s n < L) : ¬ (tendsto s at_top at_top) := 
+begin
+  intro H,
+  --have h0 := H.eventually,
+  have h1 : ∃ n, L ≤ s n := (H.eventually (eventually_ge_at_top L)).exists,
+  cases h1 with n hn,
+  have h2 := h n, 
+  linarith, done
+end
+
 -- This is the sequence of Newton approximations, viewed as real numbers
 def xR (n : ℕ) : ℝ := real.sqrt 2 - s n
 -- We can actually prove `xR` and `x` generate the same values
@@ -178,27 +201,137 @@ begin
   exact h1.symm, done
 end
 
--- And this sequence does have a finite limit:
-theorem newton_tendsto_finite_limit_v2 : ∃ L : ℝ, tendsto xR at_top (𝓝 L) :=
+-- Rewrite the recursive formula as a function application
+--def f (x : ℝ) : ℝ := (1/2) * (x + 2 / x)
+def f (x : ℝ) : ℝ := ( x * x + 2) / ( 2 * x)
+-- This is needed in the limit calculation result
+lemma rw_recursion : ∀ n : ℕ, xR (n+1) = f (xR n) := 
+begin
+  intro n,
+  have h1 := xR_same_as_x n,
+  have h2 := xR_same_as_x (n+1),
+  rw [← h1, ← h2],
+  unfold f,
+  have h3 : x (n+1) = ( x n * x n + 2) / ( 2 * x n), refl,
+  rw h3,
+  norm_cast, done
+end
+
+lemma f_contin_at_L (L : ℝ) (h : L ≠ 0) : continuous_at f L := 
+begin 
+  apply continuous_at.div,
+  swap 3, { norm_num, exact h, },
+  apply continuous_at.add,
+  apply continuous_at.mul,
+  apply continuous_at_id,
+  apply continuous_at_id,
+  apply continuous_at_const,
+  apply continuous_at.mul,
+  apply continuous_at_const,
+  exact continuous_at_id, done
+end
+
+-- So now the final push
+-- The sequence `xR` has a finite limit:
+theorem newton_tendsto_finite_limit : ∃ L : ℝ, tendsto xR at_top (𝓝 L) :=
 begin
   have h1 := sqrt_sub_newton_tendsto_finite_limit,
   cases h1 with l0 hl0,
   use real.sqrt 2 - l0,
   apply tendsto.sub,
   exact tendsto_const_nhds,
-  exact hl0,
+  exact hl0, done
 end
 
+-- The limit can't be zero:
+theorem newton_tendsto_nonzero_limit (L : ℝ) : tendsto xR at_top (𝓝 L) → L ≠ 0 :=
+begin
+  have h2 := xR_same_as_x,
+  have h0 : ∀ n : ℕ, 0 < xR n, 
+    intro n,
+    have g0 := newton_seq_positive n,
+    have h21 := h2 n,
+    rw ← h21, norm_cast, exact g0,
+  have h1 := newton_seq_bounded_below,
+  have h3 : ∀ n : ℕ, real.sqrt 2 < xR n,
+    intro n, 
+    have h30 := h1 n,
+    have h31 := h2 n,
+    have h00 := h0 n,
+    have h32 : 0 ≤ (2:ℝ), linarith,
+    have h33 : 0 ≤ (xR n) * (xR n), nlinarith,
+    have h34 : 2 < (xR n) * (xR n), rw ← h31, norm_cast, exact h30,
+    have h35 := (real.sqrt_lt h32 h33).mpr h34,
+    have h01 : 0 ≤ xR n, linarith,
+    have h36 : real.sqrt ((xR n) * (xR n)) = xR n, exact real.sqrt_mul_self h01,
+    rw h36 at h35,
+    exact h35,
+  intros H hL, -- there has to be an easier way to do all the remaining stuff in this lemma
+  --have H0 := H.eventually,
+  have G := tendsto_nhds.mp H,
+  set S := set.Ioo (-1: ℝ) (1) with hS,
+  have g1 : is_open S, exact is_open_Ioo, 
+  have g2 := G S g1,
+  have g3 : L ∈ S, rw hL, rw set.mem_Ioo, split, linarith, linarith,
+  have g4 := g2 g3,
+  have g5 : xR⁻¹' S ∉ at_top, 
+  {
+    intros H1,
+    --change set.preimage xR S ∈ at_top at H1,
+    unfold set.preimage at H1,
+    have H2 : {n : ℕ | xR n ∈ S } = ∅, 
+      by_contradiction hc,
+      change {n : ℕ | xR n ∈ S } ≠ ∅ at hc,
+      rw set.ne_empty_iff_nonempty at hc,
+      change ∃ n : ℕ, xR n ∈ S at hc,
+      cases hc with m hm,
+      cases hm with hm1 hm2,
+      have k := h3 m,
+      have k1 : (1:ℝ) < real.sqrt 2, sorry,
+      have k2 : xR m < real.sqrt 2, linarith,
+      linarith,
+    rw H2 at H1,
+    have G := empty_in_sets_eq_bot.mp H1,
+    exact at_top_ne_bot G,
+  },
+  exact g5 g4,
+end
+
+-- And this limit satisfies a specific equation
+theorem newton_limit_satisfies (L : ℝ) (H : tendsto xR at_top ((𝓝 L) )) :
+  f L = L :=
+begin
+  have h1 : tendsto (xR ∘ nat.succ) at_top (𝓝 L) := (tendsto_add_at_top_iff_nat 1).mpr H,
+  have h2 := (tendsto_add_at_top_iff_nat 1).mpr H,
+  rw show xR ∘ nat.succ = f ∘ xR, from funext rw_recursion at h1,
+  have hL : L ≠ 0, exact newton_tendsto_nonzero_limit L H,
+  have hf : continuous_at f L, exact f_contin_at_L L hL,
+  exact tendsto_nhds_unique (tendsto.comp hf H) h1,
+  done
+end
+
+-- The equation for the limit `L` can be solved to get `L = real.sqrt 2`
+-- Courtesy Patrick Massot 
+lemma solve_limit_eqn {L : ℝ} (h : L = (2 + L * L)/(2*L)) (hL : 0 < L) : L = real.sqrt 2 :=
+begin
+  apply_fun (λ x, 2*L*x) at h,
+  simp_rw mul_div_cancel' _ (ne_of_gt (by linarith) : 2*L ≠ 0) at h,
+  apply_fun (λ x, x - L*L) at h,
+  ring at h,
+  symmetry,
+  rwa real.sqrt_eq_iff_sqr_eq; linarith,
+end
+
+--------- Scratch space below here:
 -- I can try proving that `(x n) → sqrt 2` or alternately `s n → 0`
 -- There might be an advantage in working with `x n` if I can apply limit operations
-theorem sqrt_sub_newton_tendsto_zero : tendsto s at_top (𝓝 (0:ℝ)) :=
+-- As per Rudin's proof of convergence; but that same idea should also work for `s n` 
+-- This slick proof due to Patrick Massot:
+lemma dan_limit {u : ℕ → ℝ} {L : ℝ} {f : ℝ → ℝ} (hu : tendsto u at_top $ 𝓝 L)
+(hf : continuous_at f L) (huf : ∀ n, u (n+1) = f (u n)) : f L = L :=
 begin
-  have h1 := sqrt_sub_newton_tendsto_finite_limit,
-  rw (show (0 : ℝ) = real.sqrt 2 - real.sqrt 2, by simp),
-  apply tendsto.sub,
-  apply tendsto_const_nhds,
-  cases h1 with L hL,
-  unfold tendsto,
-  sorry,
-  --dsimp s at hL,
+  have lim : tendsto (u ∘ nat.succ) at_top (𝓝 L) :=
+    (tendsto_add_at_top_iff_nat 1).mpr hu,
+  rw show u ∘ nat.succ = f ∘ u, from funext huf at lim,
+  exact tendsto_nhds_unique (tendsto.comp hf hu) lim
 end
