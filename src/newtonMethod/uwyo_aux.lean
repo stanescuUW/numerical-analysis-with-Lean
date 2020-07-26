@@ -1,5 +1,5 @@
 import data.real.basic
-import uwyo_sqrt2
+import .uwyo_sqrt2
 import analysis.specific_limits
 
 open_locale topological_space

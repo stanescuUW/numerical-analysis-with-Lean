@@ -1,5 +1,5 @@
 import tactic.basic
-import uwyo_aux
+import .uwyo_aux
 import analysis.calculus.local_extr
 
 noncomputable theory
@@ -58,6 +58,7 @@ begin
     have E : V * V ≠ 0, nlinarith,
     have g2 :  (Y + 2) * (Y + 2) / ( V * V) = (Y + 2) / V * ((Y + 2) / V),
       field_simp,
+    -- this needs some polishing
     have h21 := aux_1 X Y V G hY hV G1,
     have h201 : (1/4) * (4 * (Y + 2) / V * ((Y + 2) / (V))) = (1/4) * (Y + 2 * 2 + (2*2/(X * X)) ),
       rw h21,
