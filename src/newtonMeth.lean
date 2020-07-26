@@ -1,5 +1,4 @@
 import tactic.basic
-import analysis.specific_limits
 import uwyo_aux
 import analysis.calculus.local_extr
 
@@ -266,35 +265,10 @@ begin
     have h36 : real.sqrt ((xR n) * (xR n)) = xR n, exact real.sqrt_mul_self h01,
     rw h36 at h35,
     exact h35,
-  intros H hL, -- there has to be an easier way to do all the remaining stuff in this lemma
-  --have H0 := H.eventually,
-  have G := tendsto_nhds.mp H,
-  set S := set.Ioo (-1: ℝ) (1) with hS,
-  have g1 : is_open S, exact is_open_Ioo, 
-  have g2 := G S g1,
-  have g3 : L ∈ S, rw hL, rw set.mem_Ioo, split, linarith, linarith,
-  have g4 := g2 g3,
-  have g5 : xR⁻¹' S ∉ at_top, 
-  {
-    intros H1,
-    --change set.preimage xR S ∈ at_top at H1,
-    unfold set.preimage at H1,
-    have H2 : {n : ℕ | xR n ∈ S } = ∅, 
-      by_contradiction hc,
-      change {n : ℕ | xR n ∈ S } ≠ ∅ at hc,
-      rw set.ne_empty_iff_nonempty at hc,
-      change ∃ n : ℕ, xR n ∈ S at hc,
-      cases hc with m hm,
-      cases hm with hm1 hm2,
-      have k := h3 m,
-      have k1 : (1:ℝ) < real.sqrt 2, sorry,
-      have k2 : xR m < real.sqrt 2, linarith,
-      linarith,
-    rw H2 at H1,
-    have G := empty_in_sets_eq_bot.mp H1,
-    exact at_top_ne_bot G,
-  },
-  exact g5 g4,
+  intros H hL,
+  have G := aux_3 xR h3,
+  rw hL at H,
+  exact G H, done
 end
 
 -- And this limit satisfies a specific equation
@@ -323,9 +297,6 @@ begin
 end
 
 --------- Scratch space below here:
--- I can try proving that `(x n) → sqrt 2` or alternately `s n → 0`
--- There might be an advantage in working with `x n` if I can apply limit operations
--- As per Rudin's proof of convergence; but that same idea should also work for `s n` 
 -- This slick proof due to Patrick Massot:
 lemma dan_limit {u : ℕ → ℝ} {L : ℝ} {f : ℝ → ℝ} (hu : tendsto u at_top $ 𝓝 L)
 (hf : continuous_at f L) (huf : ∀ n, u (n+1) = f (u n)) : f L = L :=

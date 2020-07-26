@@ -1,5 +1,9 @@
 import data.real.basic
 import uwyo_sqrt2
+import analysis.specific_limits
+
+open_locale topological_space
+open filter
 
 lemma aux_0 (X : ℚ) (hX: 0 < X): ( X * X + 2) / (2 * X) - X = (2 - X * X) / (2 * X) :=
 begin
@@ -60,8 +64,21 @@ begin
   have h3 : V * X = 2, field_simp, ring, rw mul_assoc, rw mul_comm X⁻¹ _,
     rw mul_inv_cancel G, linarith,
   rw mul_assoc 2 V X, rw h3,
-  linarith,
+  linarith, done
 end 
+
+-- This proof (considerably shorter than mine) is due to Reid Barton
+lemma aux_3 (s : ℕ → ℝ) (hs : ∀ n : ℕ, real.sqrt 2 < s n) : ¬ (tendsto s at_top (𝓝 0)) :=
+begin
+  rw metric.tendsto_at_top,
+  push_neg,
+  refine ⟨real.sqrt 2, by norm_num, λ N, ⟨N, le_refl _, _⟩⟩,
+  change real.sqrt 2 ≤ abs (s N - 0),
+  refine le_trans _ (le_abs_self _),
+  specialize hs N,
+  linarith, done
+end
+
 
 lemma no_rat_sq_eq_two (X : ℚ) (hX1 : X ≠ 0) :  0 ≠ ( 2 / X - X ) :=
 begin
