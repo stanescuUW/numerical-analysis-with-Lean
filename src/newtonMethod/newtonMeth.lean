@@ -307,3 +307,12 @@ begin
   rw show u ∘ nat.succ = f ∘ u, from funext huf at lim,
   exact tendsto_nhds_unique (tendsto.comp hf hu) lim
 end
+-- This one is due to Mario Carneiro:
+example (s : ℕ → ℝ) (hs : ∀ n : ℕ, 2 < s n) : ¬ (tendsto s at_top (𝓝 0)) :=
+begin
+  have : (0:ℝ) ∉ set.Ici (2 : ℝ), { simp, norm_num },
+  rw ← closure_Ioi at this,
+  exact λ h, this (mem_closure_of_tendsto h (eventually_of_forall hs)),
+  done
+end
+
