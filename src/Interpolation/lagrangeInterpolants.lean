@@ -20,6 +20,11 @@ begin
     norm_num, done
 end
 
+-- Maybe even better, working with `smul`? Maybe not!
+def lagrange_interpolant_v3 (n : ℕ) (i : ℕ) (xData : ℕ → ℝ): polynomial ℝ :=
+    ∏ j in ( finset.range (n+1) \ {i} ), 
+    ((1 : ℝ)/(xData i - xData j)) • (binomial_R (xData j))
+
 -- Either this way (working with ℕ):
 def lagrange_interpolant_v2 (n : ℕ) (i : ℕ) (xData : ℕ → ℝ): polynomial ℝ :=
     ∏ j in ( finset.range (n+1) \ {i} ), 
@@ -30,22 +35,79 @@ def lagrange_interpolant_v1 (n : ℕ) (i : fin (n+1) ) (xData : fin (n+1) → �
     ∏ j in ( finset.fin_range (n+1) \ { i } ), 
     binomial_R (xData j) * polynomial.C (1/(xData i - xData j))
 
---------- Scratch space below here:
+
+
+--------- Scratch space below here: -----------------------
 -- Check that I can work with this definition
 def myX : ℕ → ℝ 
-| 0 := (1 : ℝ)
-| 1 := (2 : ℝ)
-| (n+1) := 0
+| 0     := (1 : ℝ)
+| 1     := (2 : ℝ)
+| (n+2) := (5 : ℝ)
 
--- This is the interpolant evaluated at the first point:
+@[simp] lemma myX_0 : myX 0 = (1:ℝ) := rfl
+@[simp] lemma myX_1 : myX 1 = (2:ℝ) := rfl
+@[simp] lemma myX_all (n : ℕ): myX (nat.succ (nat.succ n)) = (5:ℝ) := rfl 
+@[simp] lemma myX_n (n : ℕ) (hn : 1 < n) : myX n = (5:ℝ) := 
+begin
+    -- should I use rec_on or something else instead of induction?
+    induction n with d hd,
+    { -- base case
+        exfalso, linarith, 
+    },
+    { -- induction step, how to best prove this?
+        have h1 : 0 < d, 
+            rw nat.succ_eq_add_one at hn,
+            linarith,
+        have h2 : ∃ m : ℕ, d = m.succ,
+        use d - 1, rw nat.succ_eq_add_one, omega, -- a little ℕ subtraction problem, thx `omega`!
+        cases h2 with m hm,
+        rw hm,
+        exact myX_all m,
+    },
+    done
+end
+
+-- Maybe I can use this lemma below:
+@[simp] lemma finset_range_2_0 : finset.range 2 \ {0} = {1} := 
+begin
+    have h1 : 2 = nat.succ 1, refl,
+    rw [ h1, finset.range_succ, finset.range_one ],
+    refl,
+end
+@[simp] lemma finset_range_2_1 : finset.range 2 \ {1} = {0} := 
+begin
+    have h1 : 2 = nat.succ 1, refl,
+    rw h1,
+    rw finset.range_succ,
+    rw finset.range_one,
+    refl,
+end
+
+-- The first interpolant (i=0) evaluated at the first point (x 0 = 1.0):
 example : polynomial.eval (1 : ℝ) (lagrange_interpolant_v2 1 0 myX) = 1 :=
 begin
     unfold lagrange_interpolant_v2,
     unfold finset.prod,
+    have h1 : 1 + 1 = 2, refl,
+    rw h1,
     simp * at *,
-    -- rw polynomial.eval_mul, fails
-    sorry,
+    unfold binomial_R,
+    rw [polynomial.eval_sub, polynomial.eval_X, polynomial.eval_C],
+    norm_num,
 end
+-- The first interpolant (i=0) evaluated at the first point (x 0 = 1.0):
+example : polynomial.eval (1 : ℝ) (lagrange_interpolant_v3 1 0 myX) = (1 : ℝ) :=
+begin
+    unfold lagrange_interpolant_v3,
+    unfold finset.prod,
+    have h1 : 1 + 1 = 2, refl,
+    rw h1,
+    rw finset_range_2_0, 
+    unfold binomial_R, simp only [one_div_eq_inv, myX_0],
+    simp * at *,
+    norm_num,
+end
+
 -- To remember:
 example (j : ℕ) (n : ℕ) (i : fin n) : j = i := 
 begin
@@ -68,5 +130,6 @@ variable x : finset ℝ
 variables a b : ℝ
 #check (binomial_R a) * (binomial_R b)
 #check finset.range
+#check polynomial.eval_mul
 
 -- #lint-
