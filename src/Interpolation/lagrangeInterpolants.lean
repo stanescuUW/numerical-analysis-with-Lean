@@ -20,6 +20,31 @@ begin
     norm_num, done
 end
 
+def scaled_binomial (a b : ℝ) : polynomial ℝ := 
+    ((1 : ℝ)/(a - b)) • (polynomial.X - polynomial.C b)
+
+@[simp] lemma bin_zero (a b : ℝ) (h : a ≠ b) : polynomial.eval b (scaled_binomial a b) = 0 :=
+begin
+    unfold scaled_binomial, -- doesn't work without this
+    rw [polynomial.eval_smul, polynomial.eval_sub, polynomial.eval_X, polynomial.eval_C],
+    rw [sub_self, algebra.id.smul_eq_mul, mul_zero],
+    done
+end
+
+@[simp] lemma bin_one (a b : ℝ) (h : a ≠ b) : polynomial.eval a (scaled_binomial a b) = 1 :=
+begin
+    unfold scaled_binomial, -- doesn't work without this
+    rw [polynomial.eval_smul, polynomial.eval_sub, polynomial.eval_X, polynomial.eval_C],
+    rw algebra.id.smul_eq_mul,
+    have h1 : a - b ≠ 0, exact sub_ne_zero_of_ne h,
+    exact div_mul_cancel 1 h1, done
+end
+
+-- Maybe even better, working with `smul`? Maybe not!
+def lagrange_interpolant_v4 (n : ℕ) (i : ℕ) (xData : ℕ → ℝ): polynomial ℝ :=
+    ∏ j in ( finset.range (n+1) \ {i} ), scaled_binomial (xData i) (xData j) 
+
+
 -- Maybe even better, working with `smul`? Maybe not!
 def lagrange_interpolant_v3 (n : ℕ) (i : ℕ) (xData : ℕ → ℝ): polynomial ℝ :=
     ∏ j in ( finset.range (n+1) \ {i} ), 
@@ -82,6 +107,16 @@ begin
     rw finset.range_one,
     refl,
 end
+@[simp] lemma finset_range_20 : finset.range 2 \ {0} = {1} := dec_trivial -- wow!
+
+example : polynomial.eval (1 : ℝ) (lagrange_interpolant_v4 1 0 myX) = 1 :=
+begin
+    unfold lagrange_interpolant_v4,
+    simp * at *, -- still doesn't use the simp lemmas for scaled_binomial
+    have h : (1:ℝ) ≠ 2, linarith,
+    exact bin_one 1 2 h,
+end
+
 
 -- The first interpolant (i=0) evaluated at the first point (x 0 = 1.0):
 example : polynomial.eval (1 : ℝ) (lagrange_interpolant_v2 1 0 myX) = 1 :=
