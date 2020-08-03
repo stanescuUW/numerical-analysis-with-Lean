@@ -33,14 +33,20 @@ begin
         rw times_cont_diff_on_zero at hf,
         --unfold strict_mono at hx,
         have h001 : 0 < 1, linarith,
-        have h002 : (0 : fin 2) < (1 : fin 2), exact h001, -- why doesn't linarith work on this one?
+        -- The above was needed because linarith fails on next one:
+        have h002 : (0 : fin 2) < (1 : fin 2), exact h001, -- linarith fails !!!???
         have hx01 := hx h002, clear h001, clear h002,
         have hx0 := hi 0,
         have hx1 := hi 1,
         cases hx0 with h11 h121, cases hx1 with h21 h221, 
         have h3 : 0 < 1, linarith,
         have h41 : continuous_on f (Icc (x 0) (x 1)), 
-            have h412 : (Icc (x 0) (x 1)) ⊆ Icc A B, sorry,
+            have h412 : (Icc (x 0) (x 1)) ⊆ Icc A B, 
+            intros z hz, cases hz with hz1 hz2,
+            cases h11 with h11z h12z,
+            split, linarith,
+            cases h21 with h21z h22z,
+            linarith,
             exact continuous_on.mono hf h412,
         have h42 : f (x 0) = f (x 1), rw [h121, h221], 
         have h5 := exists_deriv_eq_zero f hx01 h41 h42, 
@@ -57,18 +63,26 @@ begin
     { -- induction step
         -- the derivative is in Cᵈ
         intros f hf hi,
-        have hfc : continuous_on f (Icc A B), sorry, 
+        have hfc := times_cont_diff_on.continuous_on hf,
         have H := one_step d.succ A B f x hx f hfc hi,
         cases H with xp hxp, cases hxp with hxpx hxpi,
         set g := deriv f with hg,
-        have hder : times_cont_diff_on ℝ d g (Icc A B),
+        --have h1 := times_cont_diff_on_succ_iff_has_fderiv_within_at.mp hf (x 0) (hi 0).1, 
+        -- above is not immediately useful
+        have h0 := unique_diff_on_Icc hAB,
+        have h00 : ((d + 1) : with_top ℕ) ≤ d.succ, norm_cast, 
+        have h1 := times_cont_diff_on.fderiv_within hf h0 h00, 
+        simp only [] at h1,
+        have h000 : (1 : with_top ℕ) ≤ d.succ, norm_cast, sorry,
+        have h01 := times_cont_diff_on.continuous_on_iterated_deriv_within hf h000 h0,
+        have hder : times_cont_diff_on ℝ d g (Icc A B), -- should come from hf
+            rw hg,
             sorry, 
         have hdg := hd xp hxpx g hder, clear hd,
-        -- the function is continuous
         have G := hdg hxpi,
-        have K : iterated_deriv (d+1) g = iterated_deriv (d.succ + 1) f,
-            sorry,
-        rw K at G,
+        have K : iterated_deriv (d.succ + 1) f = iterated_deriv d.succ g,
+            apply iterated_deriv_succ',
+        rw ← K at G,
         exact G,
     },
     done
@@ -77,3 +91,29 @@ end
 end rolle_general
 
 ------------------ Scratch space below here ------------------------------
+#check deriv
+#check times_cont_diff_on.continuous_on_iterated_deriv_within
+#check times_cont_diff_on.differentiable_on_iterated_deriv_within
+variables (f : ℝ → ℝ)
+example (A B : ℝ) (hAB : A < B) (f : ℝ → ℝ) (n : ℕ) (hf : times_cont_diff_on ℝ (n+1) f (Icc A B) ) :
+    times_cont_diff_on ℝ n (deriv f) (Icc A B) :=
+begin 
+    refine times_cont_diff_on_of_differentiable_on_deriv _,
+    have h0 := unique_diff_on_Icc hAB,
+    have h := (times_cont_diff_on_iff_continuous_on_differentiable_on_deriv h0).mp hf,
+    cases h with h1 h2,
+    intros m hm, 
+    have g := h2 m,
+    have g1 : (m : with_top ℕ) < n + 1, sorry,
+    have g2 := g g1,
+    sorry,
+    --refine times_cont_diff.times_cont_diff_on _
+end
+
+#check times_cont_diff_iff_continuous_differentiable.mp  
+#check iterated_deriv_within_succ
+#check differentiable ℝ f
+#check times_cont_diff_on_iff_continuous_on_differentiable_on_deriv
+#check times_cont_diff_on ℝ 3 f
+#check times_cont_diff_zero
+#check  times_cont_diff_on_succ_iff_has_fderiv_within_at
