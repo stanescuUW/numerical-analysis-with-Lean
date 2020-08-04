@@ -17,6 +17,12 @@ begin
   rwa [h1, h2] at h,
 end
 
+example (n : ℕ) (i j : fin n) (h : (j.val : fin (n+2)) < (i.val.succ : fin (n+2))) : j.val < i.val.succ :=
+begin
+  change (j.val : fin (n+2)).val < (i.val.succ : fin (n+2)).val at h,
+  rwa [fin.coe_val_of_lt (show j.1 < n + 2, by linarith [j.2]),
+       fin.coe_val_of_lt (show i.1 + 1 < n + 2, by linarith [i.2])] at h,
+end
 
 lemma one_step (n : ℕ) (a b : ℝ) (f : ℝ → ℝ) (x : fin (n+2) → ℝ) (hx : strict_mono x) :
     ∀ (f : ℝ → ℝ), continuous_on f (Icc a b) → 
@@ -32,6 +38,7 @@ begin
     have hi := (hxp i).1, have hj := (hxp j).1,
     cases hi with hi1 hi2, cases hj with hj1 hj2,
     rcases lt_trichotomy ((i+1) : fin (n+2) ) (j : fin (n+2)) with h1|h2|h3,
+    --rcases lt_trichotomy (fin.cast_succ (i+1)) (fin.cast_succ j) with h1|h2|h3,
     -- case (i+1) < j
     have hii1 := hx h1, linarith, 
     -- case (i+1) = j
@@ -54,7 +61,44 @@ begin
     linarith,
 end
 
-#check fin.cast_succ
+example (a b : ℝ) (hab : a < b) (f : ℝ → ℝ) (n : ℕ) (hf : times_cont_diff_on ℝ (n+1) f (Ioo a b) ) :
+  times_cont_diff_on ℝ n (deriv f) (Ioo a b) :=
+begin
+  have : deriv f = (λ u : ℝ →L[ℝ] ℝ, u 1) ∘ (fderiv ℝ f), by { ext x, refl },
+  simp only [this],
+  have : times_cont_diff_on ℝ n (fderiv ℝ f) (Ioo a b),
+  { apply ((times_cont_diff_on_succ_iff_fderiv_within (unique_diff_on_Ioo a b)).1 hf).2.congr,
+    assume x hx,
+    calc fderiv ℝ f x = fderiv_within ℝ f univ x : by simp
+    ... = fderiv_within ℝ f (univ ∩ Ioo a b) x :
+      (fderiv_within_inter (Ioo_mem_nhds hx.1 hx.2) unique_diff_within_at_univ).symm
+    ... = fderiv_within ℝ f (Ioo a b) x : by simp },
+  apply times_cont_diff.comp_times_cont_diff_on _ this,
+  exact (is_bounded_bilinear_map_apply.is_bounded_linear_map_left _).times_cont_diff
+end
+
+
+--This proof will unfortunately **not** work for Icc:
+/-
+
+example (a b : ℝ) (hab : a < b) (f : ℝ → ℝ) (n : ℕ) (hf : times_cont_diff_on ℝ (n+1) f (Icc a b) ) :
+  times_cont_diff_on ℝ n (deriv f) (Icc a b) :=
+begin
+  have : deriv f = (λ u : ℝ →L[ℝ] ℝ, u 1) ∘ (fderiv ℝ f), by { ext x, refl },
+  simp only [this],
+  have : times_cont_diff_on ℝ n (fderiv ℝ f) (Icc a b),
+  { apply ((times_cont_diff_on_succ_iff_fderiv_within (unique_diff_on_Icc hab)).1 hf).2.congr,
+    assume x hx,
+    calc fderiv ℝ f x = fderiv_within ℝ f univ x : by simp
+    ... = fderiv_within ℝ f (univ ∩ Icc a b) x :
+      (fderiv_within_inter (Ioo_mem_nhds hx.1 hx.2) unique_diff_within_at_univ).symm
+    ... = fderiv_within ℝ f (Icc a b) x : by simp },
+  apply times_cont_diff.comp_times_cont_diff_on _ this,
+  exact (is_bounded_bilinear_map_apply.is_bounded_linear_map_left _).times_cont_diff
+end
+
+-/
+
 
 theorem general_rolle (n : ℕ) (A B : ℝ) (hAB : A < B) (x : fin (n+2) → ℝ) (hx : strict_mono x) :
     ∀ (f : ℝ → ℝ), times_cont_diff_on ℝ n f (Icc A B) → 
