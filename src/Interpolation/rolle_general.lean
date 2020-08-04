@@ -77,7 +77,7 @@ begin
         have h01 := times_cont_diff_on.continuous_on_iterated_deriv_within hf h000 h0,
         have hder : times_cont_diff_on ℝ d g (Icc A B), -- should come from hf
             rw hg,
-            sorry, 
+            sorry, -- this seems much harder to get than it should!!!
         have hdg := hd xp hxpx g hder, clear hd,
         have G := hdg hxpi,
         have K : iterated_deriv (d.succ + 1) f = iterated_deriv d.succ g,
@@ -95,11 +95,11 @@ end rolle_general
 #check times_cont_diff_on.continuous_on_iterated_deriv_within
 #check times_cont_diff_on.differentiable_on_iterated_deriv_within
 variables (f : ℝ → ℝ)
-example (A B : ℝ) (hAB : A < B) (f : ℝ → ℝ) (n : ℕ) (hf : times_cont_diff_on ℝ (n+1) f (Icc A B) ) :
-    times_cont_diff_on ℝ n (deriv f) (Icc A B) :=
+example (a b : ℝ) (hAB : a < b) (f : ℝ → ℝ) (n : ℕ) (hf : times_cont_diff_on ℝ (n+1) f (Ioo a b) ) :
+    times_cont_diff_on ℝ n (deriv f) (Ioo a b) :=
 begin 
     refine times_cont_diff_on_of_differentiable_on_deriv _,
-    have h0 := unique_diff_on_Icc hAB,
+    have h0 := unique_diff_on_Ioo a b,
     have h := (times_cont_diff_on_iff_continuous_on_differentiable_on_deriv h0).mp hf,
     cases h with h1 h2,
     intros m hm, 
@@ -110,6 +110,7 @@ begin
     --refine times_cont_diff.times_cont_diff_on _
 end
 
+#check unique_diff_on_Ioo
 #check times_cont_diff_iff_continuous_differentiable.mp  
 #check iterated_deriv_within_succ
 #check differentiable ℝ f
