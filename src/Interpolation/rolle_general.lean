@@ -1,10 +1,22 @@
 import analysis.calculus.local_extr
 import analysis.calculus.times_cont_diff
 import analysis.calculus.iterated_deriv
-import tactic
+import tactic data.fin
 open set
 
 namespace rolle_general
+
+lemma shing (n : ℕ) (i j : fin (n+1)) (h : (j.val : fin (n+2)) < (i.val.succ : fin (n+2))) : 
+    j.val < i.val.succ :=
+begin
+  have h1 : (j.val : fin (n+2)).val = j.val,
+  { rw fin.coe_val_of_lt (show j.1 < n + 2, by linarith [j.2]) },
+  have h2 : (i.val.succ : fin (n+2)).val = i.val.succ,
+  { rw fin.coe_val_of_lt (show i.1 + 1 < n + 2, by linarith [i.2]) },
+  change (j.val : fin (n+2)).val < (i.val.succ : fin (n+2)).val at h,
+  rwa [h1, h2] at h,
+end
+
 
 lemma one_step (n : ℕ) (a b : ℝ) (f : ℝ → ℝ) (x : fin (n+2) → ℝ) (hx : strict_mono x) :
     ∀ (f : ℝ → ℝ), continuous_on f (Icc a b) → 
@@ -15,51 +27,32 @@ begin
     have h1 : ∀ (i : fin (n+1)), ∃ y ∈ (Ioo (x i) (x (i+1))), deriv f y = 0,
         sorry,
     choose xp hxp using h1, 
-    use xp,
-    split,
+    use xp, split,
     intros i j hij,
     have hi := (hxp i).1, have hj := (hxp j).1,
     cases hi with hi1 hi2, cases hj with hj1 hj2,
-    --set i2 := fin.cast_succ (i+1) with hii2,
-    --have checkf : i2.val = i + 1, rw hii2, sorry, 
-    --set j2 := fin.cast_succ j with hjj2,
     rcases lt_trichotomy ((i+1) : fin (n+2) ) (j : fin (n+2)) with h1|h2|h3,
-    --rcases lt_trichotomy i2 j2 with gj1|gj2|gj3,
     -- case (i+1) < j
     have hii1 := hx h1, linarith, 
     -- case (i+1) = j
     rw h2 at hi2, linarith,
     -- case j < (i+1) is not possible because i < j
     exfalso, 
-        have g0 : i.val < j.val, exact hij,
-        --have g1 : j2.val < i2.val + 1, exact h3,
         have h3n : (j : ℕ) < ((i + 1) : ℕ), 
             norm_num at h3,
-            --have hcj := fin.coe_coe_eq_self j,
-            --have hci := fin.coe_coe_eq_self i,
-            rw fin.coe_eq_val, rw fin.coe_eq_val,
-            rw fin.coe_eq_val at h3, rw fin.coe_eq_val at h3,
-            norm_cast at h3, 
-            have m1 : i.val + 1 = i.val.succ, rw nat.succ_eq_add_one,
-            rw m1, clear m1,--exact h3,
-            have m2 := fin.coe_fin_lt.mp h3, -- why does this keep failing?
-            --rw fin.coe_eq_val at h3,
-            --rw hcj,
-            sorry, -- but there's trouble here
+            have m3 := shing n i j h3, exact m3,
         have gf1 := nat.lt_succ_iff.mp h3n,
-        have hijn : (i : ℕ) < (j : ℕ), exact hij,
+        have hijn : (i : ℕ) < (j : ℕ), exact hij, --strange as it looks, linarith needs this
         linarith,
-    sorry, --this should be easy
+    intro i, split,
+    swap, exact (hxp i).2,
+    have g0 := (hxp i).1,
+    split,
+    have g1 := (hxi i).1, cases g1 with g11 g12, cases g0 with g01 g02,
+    linarith,
+    have g1 := (hxi (i+1)).1, cases g1 with g11 g12, cases g0 with g01 g02,
+    linarith,
 end
-#check fin.cast_val
-#check fin.coe_fin_lt.mp
-#check fin.cast_succ_val
-#check fin.coe_coe_eq_self
-#check fin.cast_succ
-#check fin.coe_eq_val
-#check lt_iff_le_and_ne
-#check le_iff_lt_or_eq
-example (i j : ℕ) (h : j < i + 1 ) : j ≤ i := nat.lt_succ_iff.mp h
 
 theorem general_rolle (n : ℕ) (A B : ℝ) (hAB : A < B) (x : fin (n+2) → ℝ) (hx : strict_mono x) :
     ∀ (f : ℝ → ℝ), times_cont_diff_on ℝ n f (Icc A B) → 
@@ -131,47 +124,6 @@ end
 end rolle_general
 
 ------------------ Scratch space below here ------------------------------
-lemma one_step (n : ℕ) (a b : ℝ) (f : ℝ → ℝ) (x : fin (n+2) → ℝ) (hx : strict_mono x) :
-    ∀ (f : ℝ → ℝ), continuous_on f (Icc a b) → 
-    (∀ i, x i ∈ (Icc a b) ∧ f (x i) = 0)  →
-    ∃ (xp : fin(n+1) → ℝ), strict_mono xp ∧ ∀ (i : fin (n+1)), xp i ∈ (Icc a b) ∧ deriv f (xp i) = 0 :=
-begin
-    intros f hf hxi,
-    have h1 : ∀ (i : fin (n+1)), ∃ y ∈ (Ioo (x i) (x (i+1))), deriv f y = 0,
-        sorry,
-    choose xp hxp using h1, 
-    use xp,
-    split,
-    intros i j hij,
-    have hi := (hxp i).1, have hj := (hxp j).1,
-    cases hi with hi1 hi2, cases hj with hj1 hj2,
-    set i2 := fin.cast_succ (i+1) with hii2,
-    set j2 := fin.cast_succ j with hjj2,
-    --rcases lt_trichotomy ((i+1) : fin (n+2) ) (j : fin (n+2)) with h1|h2|h3,
-    rcases lt_trichotomy i2 j2 with gj1|gj2|gj3,
-    -- case (i+1) < j
-    have hii1 := hx gj1, rw [hii2, hjj2] at hii1,  linarith, 
-    -- case (i+1) = j
-    rw h2 at hi2, linarith,
-    -- case j < (i+1) is not possible because i < j
-    exfalso, 
-        have g0 : i.val < j.val, exact hij,
-        --have g1 : j2.val < i2.val + 1, exact h3,
-        have h3n : (j : ℕ) < ((i + 1) : ℕ), 
-            norm_num at h3,
-            have hcj := fin.coe_coe_eq_self j,
-            have hci := fin.coe_coe_eq_self i,
-            rw fin.coe_eq_val, rw fin.coe_eq_val,
-            rw fin.coe_eq_val at h3, rw fin.coe_eq_val at h3,
-            --rw fin.coe_eq_val at h3,
-            --rw hcj,
-            sorry, -- but there's trouble here
-        have gf1 := nat.lt_succ_iff.mp h3n,
-        have hijn : (i : ℕ) < (j : ℕ), exact hij,
-        linarith,
-    sorry, --this should be easy
-end
-
 
 #check deriv
 #check times_cont_diff_on.continuous_on_iterated_deriv_within
