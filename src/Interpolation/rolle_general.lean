@@ -54,6 +54,8 @@ begin
     linarith,
 end
 
+#check fin.cast_succ
+
 theorem general_rolle (n : ℕ) (A B : ℝ) (hAB : A < B) (x : fin (n+2) → ℝ) (hx : strict_mono x) :
     ∀ (f : ℝ → ℝ), times_cont_diff_on ℝ n f (Icc A B) → 
     (∀ i, x i ∈ (Icc A B) ∧ f (x i) = 0)  → 
