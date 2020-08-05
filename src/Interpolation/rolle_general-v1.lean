@@ -19,12 +19,29 @@ begin
     intro i,
     have j0 : n + 1 < n + 1 + 1, linarith,
     have j0 := @fin.coe_val_of_lt (n+1) (n+1) j0,
-    have h2 := i.is_lt,
-    have h3 : i.val ≤ n + 1, linarith,
+    have h3 : i.val ≤ n + 1, linarith [i.is_lt],
     apply fin.le_iff_val_le_val.mpr,
     rw ← j0 at h3,
     exact h3,
 end
+
+lemma sgouezel 
+    (a b : ℝ) (f : ℝ → ℝ) (n : ℕ) (hf : times_cont_diff_on ℝ (n+1) f (Ioo a b) ) :
+    times_cont_diff_on ℝ n (deriv f) (Ioo a b) :=
+begin
+  have : deriv f = (λ u : ℝ →L[ℝ] ℝ, u 1) ∘ (fderiv ℝ f), by { ext x, refl },
+  simp only [this],
+  have : times_cont_diff_on ℝ n (fderiv ℝ f) (Ioo a b),
+  { apply ((times_cont_diff_on_succ_iff_fderiv_within (unique_diff_on_Ioo a b)).1 hf).2.congr,
+    assume x hx,
+    calc fderiv ℝ f x = fderiv_within ℝ f univ x : by simp
+    ... = fderiv_within ℝ f (univ ∩ Ioo a b) x :
+      (fderiv_within_inter (Ioo_mem_nhds hx.1 hx.2) unique_diff_within_at_univ).symm
+    ... = fderiv_within ℝ f (Ioo a b) x : by simp },
+  apply times_cont_diff.comp_times_cont_diff_on _ this,
+  exact (is_bounded_bilinear_map_apply.is_bounded_linear_map_left _).times_cont_diff
+end
+
 
 
 lemma one_step (n : ℕ) (x : fin (n+2) → ℝ) (hx : strict_mono x) :
@@ -42,7 +59,6 @@ begin
     have hi := (hxp i).1, have hj := (hxp j).1,
     cases hi with hi1 hi2, cases hj with hj1 hj2,
     rcases lt_trichotomy ((i+1) : fin (n+2) ) (j : fin (n+2)) with h1|h2|h3,
-    --rcases lt_trichotomy (fin.cast_succ (i+1)) (fin.cast_succ j) with h1|h2|h3,
     -- case (i+1) < j
     have hii1 := hx h1, linarith, 
     -- case (i+1) = j
@@ -86,10 +102,7 @@ begin
         -- The above was needed because linarith fails on next one:
         have h2 : (0 : fin 2) < (1 : fin 2), exact h1, -- linarith fails !!!???
         have hx01 := hx h2, clear h1, clear h2,
-        have hx0 := hi 0,
-        have hx1 := hi 1,
-        have heq : f (x 0) = f (x 1),
-            rw [hx0, hx1],
+        have heq : f (x 0) = f (x 1), rw [hi 0, hi 1],
         have h5 := exists_deriv_eq_zero f hx01 hf heq,
         rw iterated_deriv_one,
         have g : (((0 : ℕ) + 1) : fin 2) = 1, norm_cast,
@@ -103,9 +116,15 @@ begin
         have H := one_step d.succ x hx f hfc hi,
         cases H with xp hxp, cases hxp with hxpx hxpi,
         set g := deriv f with hg,
-        have hder : times_cont_diff_on ℝ d g (Icc (xp 0) (xp (d+1))), -- should come from hf
-        --    rw hg,
-            sorry, -- this seems much harder to get than it should!!!
+        set a := x 0 with ha,
+        set b := x (d.succ + 1) with hb,
+        have hf1 : times_cont_diff_on ℝ d.succ f (Ioo (x 0) (x (d.succ+1))),
+            have hf11 : Ioo a b ⊆ Icc a b, exact Ioo_subset_Icc_self,
+            exact times_cont_diff_on.mono hf hf11,
+        have hder0 := sgouezel (x 0) (x (d.succ +1)) f d hf1,
+        have hder : times_cont_diff_on ℝ d g (Icc (xp 0) (xp (d+1))),
+            --from hder0: because xp interval ⊆ x interval
+            sorry,
         have hdg := hd xp hxpx g hder, clear hd,
         have H1 : ∀ i, g (xp i) = 0, 
             intro i,
@@ -114,11 +133,17 @@ begin
         have K : iterated_deriv (d.succ + 1) f = iterated_deriv d.succ g,
             apply iterated_deriv_succ',
         rw ← K at G,
+        cases G with c hc,
+        use c,
+        cases hc with hc1 hc2,
+        split, swap, exact hc2,
+        -- last sorry follows from hc1: because Ioo xp interval ⊆ Ioo x interval
         sorry,
-        --exact G,
     },
     done
 end
+
+example (a b : ℝ) : Ioo a b ⊆ Icc a b := Ioo_subset_Icc_self
 
 end rolle_general
 
