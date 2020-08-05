@@ -25,6 +25,13 @@ begin
     exact h3,
 end
 
+lemma fin_lt_succ (n : ℕ) (i : fin (n + 1)) : (i : fin (n+2)) < (i+1) :=
+begin
+    apply fin.lt_iff_val_lt_val.mpr,
+    sorry,
+end
+
+
 lemma sgouezel 
     (a b : ℝ) (f : ℝ → ℝ) (n : ℕ) (hf : times_cont_diff_on ℝ (n+1) f (Ioo a b) ) :
     times_cont_diff_on ℝ n (deriv f) (Ioo a b) :=
@@ -48,11 +55,30 @@ lemma one_step (n : ℕ) (x : fin (n+2) → ℝ) (hx : strict_mono x) :
     ∀ (f : ℝ → ℝ), continuous_on f ( Icc (x 0) (x (n+1)) ) → 
     (∀ i, f (x i) = 0)  →
     ∃ (xp : fin(n+1) → ℝ), strict_mono xp ∧ 
-        ∀ (i : fin (n+1)), xp i ∈ ( Icc (x 0) (x (n+1)) ) ∧ deriv f (xp i) = 0 :=
+        ∀ (i : fin (n+1)), xp i ∈ ( Ioo (x 0) (x (n+1)) ) ∧ deriv f (xp i) = 0 :=
 begin
     intros f hf hxi,
     have h1 : ∀ (i : fin (n+1)), ∃ y ∈ (Ioo (x i) (x (i+1))), deriv f y = 0,
-        sorry,
+        intro i,
+        apply exists_deriv_eq_zero,
+        -- show x i < x (i+1)
+        exact hx (fin_lt_succ n i),
+        -- show f continuous on Icc (x i) (x (i+1))
+        have h02 : Icc (x i) (x (i+1)) ⊆ Icc (x 0) (x (n+1)),
+            intros z hz,
+            cases hz with hz1 hz2,
+            split,
+            have g1 : 0 ≤ (i : ℕ), linarith,
+            have g2 : (0 : fin (n+2)) ≤ i, norm_cast, sorry,
+            have g3 := (strict_mono.le_iff_le hx).mpr g2,
+            linarith, -- use strict_mono x
+            have h020 := fin_le_last_val n (i+1), 
+            have g3 := (strict_mono.le_iff_le hx).mpr h020,
+            linarith,
+        exact continuous_on.mono hf h02,
+        -- show f (x i) = f (x (i+1))
+        rw [hxi i, hxi (i+1)],
+        -- this is just normal Rolle, exists_deriv_eq_zero
     choose xp hxp using h1, 
     use xp, split,
     intros i j hij,
@@ -116,15 +142,15 @@ begin
         have H := one_step d.succ x hx f hfc hi,
         cases H with xp hxp, cases hxp with hxpx hxpi,
         set g := deriv f with hg,
-        set a := x 0 with ha,
-        set b := x (d.succ + 1) with hb,
         have hf1 : times_cont_diff_on ℝ d.succ f (Ioo (x 0) (x (d.succ+1))),
-            have hf11 : Ioo a b ⊆ Icc a b, exact Ioo_subset_Icc_self,
+            have hf11 : Ioo (x 0) (x (d.succ + 1)) ⊆ Icc (x 0) (x (d.succ + 1)), 
+                exact Ioo_subset_Icc_self,
             exact times_cont_diff_on.mono hf hf11,
         have hder0 := sgouezel (x 0) (x (d.succ +1)) f d hf1,
         have hder : times_cont_diff_on ℝ d g (Icc (xp 0) (xp (d+1))),
-            --from hder0: because xp interval ⊆ x interval
-            sorry,
+            have hdr0 : Icc (xp 0) (xp (d+1)) ⊆ Ioo (x 0) (x (d.succ + 1)), 
+                sorry,
+            exact times_cont_diff_on.mono hder0 hdr0,
         have hdg := hd xp hxpx g hder, clear hd,
         have H1 : ∀ i, g (xp i) = 0, 
             intro i,
@@ -137,8 +163,15 @@ begin
         use c,
         cases hc with hc1 hc2,
         split, swap, exact hc2,
-        -- last sorry follows from hc1: because Ioo xp interval ⊆ Ioo x interval
-        sorry,
+        have hxp0 := (hxpi 0).1, cases hxp0 with hxp01 hxp02,
+        cases hc1 with hc10 hc11,
+        split, linarith,
+        have hxp1 := (hxpi d.succ).1, cases hxp1 with hxp11 hxp12,
+        have hxpeq0 : d+1 = d.succ, rw nat.succ_eq_add_one,
+        have hxpeq1 : ((d+1) :  fin (d.succ + 1) ) = d.succ,
+            norm_cast, 
+        rw hxpeq1 at hc11,
+        linarith,
     },
     done
 end
