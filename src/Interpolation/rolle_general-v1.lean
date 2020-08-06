@@ -46,15 +46,6 @@ begin
     exact h3,
 end
 
-lemma fin_lt_succ_v0 (n : ℕ) (i : fin (n + 1)) : (i : fin (n+2)) < ((i+1) : fin (n+2)) :=
-begin
-    apply fin.lt_iff_val_lt_val.mpr,
-    have h1 : i.val < n+2, linarith [i.2],
-    have h2 := @fin.coe_val_of_lt (n+1) i.val h1,
-    have h3 := fin.coe_coe_of_lt h1,
-    sorry,
-end
-
 -- Again thanks to Shing Tak Lam
 lemma fin_lt_succ (n : ℕ) (i : fin (n + 1)) : (i : fin (n+2)) < (i+1) :=
 begin
