@@ -6,6 +6,7 @@ open set
 
 namespace rolle_general
 
+-- This is courtesy Shing Tak Lam
 lemma shing (n : ℕ) (i j : fin (n+1)) (h : (j.val : fin (n+2)) < (i.val.succ : fin (n+2))) : 
     j.val < i.val.succ :=
 begin
@@ -45,16 +46,26 @@ begin
     exact h3,
 end
 
-lemma fin_lt_succ (n : ℕ) (i : fin (n + 1)) : (i : fin (n+2)) < (i+1) :=
+lemma fin_lt_succ_v0 (n : ℕ) (i : fin (n + 1)) : (i : fin (n+2)) < ((i+1) : fin (n+2)) :=
 begin
     apply fin.lt_iff_val_lt_val.mpr,
-    have h11 := i.2,
-    have h12 : i.val < n+1+1, linarith,
-    have j0 := @fin.coe_val_of_lt (n+1) i.val h12,
-    have h2 := fin.coe_coe_of_lt h12,
+    have h1 : i.val < n+2, linarith [i.2],
+    have h2 := @fin.coe_val_of_lt (n+1) i.val h1,
+    have h3 := fin.coe_coe_of_lt h1,
     sorry,
 end
 
+-- Again thanks to Shing Tak Lam
+lemma fin_lt_succ (n : ℕ) (i : fin (n + 1)) : (i : fin (n+2)) < (i+1) :=
+begin
+  cases i with i hi,
+  change (_ : fin (n+2)).val < (_ : fin (n+2)).val,
+  simp only [fin.coe_mk, coe_coe],
+  norm_cast,
+  rw [fin.coe_val_of_lt, fin.coe_val_of_lt]; omega,
+end
+
+-- Result below thanks to Sebastien Gouezel
 lemma sgouezel 
     (a b : ℝ) (f : ℝ → ℝ) (n : ℕ) (hf : times_cont_diff_on ℝ (n+1) f (Ioo a b) ) :
     times_cont_diff_on ℝ n (deriv f) (Ioo a b) :=
