@@ -25,12 +25,35 @@ begin
     exact h3,
 end
 
+lemma fin_le_last_val_2 (n : ℕ) : ∀ i : fin (n + 2), i ≤ (n+1) :=
+begin
+  intro i,
+  change i.val ≤ ((_ + _) : fin (n+2)).val,
+  norm_cast,
+  have := i.2,
+  rw fin.coe_val_of_lt; omega
+end
+
+lemma fin_zero_le_any_val (n : ℕ) : ∀ i : fin (n + 2), 0 ≤ i :=
+begin
+    intro i,
+    have j0 : 0 < n + 1 + 1, linarith,
+    have j0 := @fin.coe_val_of_lt (n+1) 0 j0,
+    have h3 : 0 ≤ i.val, linarith,
+    apply fin.le_iff_val_le_val.mpr,
+    rw ← j0 at h3,
+    exact h3,
+end
+
 lemma fin_lt_succ (n : ℕ) (i : fin (n + 1)) : (i : fin (n+2)) < (i+1) :=
 begin
     apply fin.lt_iff_val_lt_val.mpr,
+    have h11 := i.2,
+    have h12 : i.val < n+1+1, linarith,
+    have j0 := @fin.coe_val_of_lt (n+1) i.val h12,
+    have h2 := fin.coe_coe_of_lt h12,
     sorry,
 end
-
 
 lemma sgouezel 
     (a b : ℝ) (f : ℝ → ℝ) (n : ℕ) (hf : times_cont_diff_on ℝ (n+1) f (Ioo a b) ) :
@@ -49,8 +72,6 @@ begin
   exact (is_bounded_bilinear_map_apply.is_bounded_linear_map_left _).times_cont_diff
 end
 
-
-
 lemma one_step (n : ℕ) (x : fin (n+2) → ℝ) (hx : strict_mono x) :
     ∀ (f : ℝ → ℝ), continuous_on f ( Icc (x 0) (x (n+1)) ) → 
     (∀ i, f (x i) = 0)  →
@@ -68,9 +89,7 @@ begin
             intros z hz,
             cases hz with hz1 hz2,
             split,
-            have g1 : 0 ≤ (i : ℕ), linarith,
-            have g2 : (0 : fin (n+2)) ≤ i, norm_cast, sorry,
-            have g3 := (strict_mono.le_iff_le hx).mpr g2,
+            have g3 := (strict_mono.le_iff_le hx).mpr (fin_zero_le_any_val n i),
             linarith, -- use strict_mono x
             have h020 := fin_le_last_val n (i+1), 
             have g3 := (strict_mono.le_iff_le hx).mpr h020,
@@ -113,7 +132,6 @@ begin
     linarith, done
 end
 
-
 theorem general_rolle (n : ℕ) (x : fin (n+2) → ℝ) (hx : strict_mono x) :
     ∀ (f : ℝ → ℝ), times_cont_diff_on ℝ n f ( Icc (x 0) (x (n+1)) ) → 
     (∀ i, f (x i) = 0)  → 
@@ -149,7 +167,12 @@ begin
         have hder0 := sgouezel (x 0) (x (d.succ +1)) f d hf1,
         have hder : times_cont_diff_on ℝ d g (Icc (xp 0) (xp (d+1))),
             have hdr0 : Icc (xp 0) (xp (d+1)) ⊆ Ioo (x 0) (x (d.succ + 1)), 
-                sorry,
+                intros z hz,
+                cases hz with hz1 hz2,
+                split,
+                cases (hxpi 0).1 with h0z0 h0z1, linarith,
+                cases (hxpi d.succ).1 with hdz0 hdz1,
+                norm_cast at hz2, linarith,
             exact times_cont_diff_on.mono hder0 hdr0,
         have hdg := hd xp hxpx g hder, clear hd,
         have H1 : ∀ i, g (xp i) = 0, 
@@ -175,8 +198,6 @@ begin
     },
     done
 end
-
-example (a b : ℝ) : Ioo a b ⊆ Icc a b := Ioo_subset_Icc_self
 
 end rolle_general
 
