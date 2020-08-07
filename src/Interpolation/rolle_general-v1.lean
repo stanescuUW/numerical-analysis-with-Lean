@@ -6,15 +6,6 @@ open set
 
 namespace rolle_general
 
--- This is courtesy Shing Tak Lam
-lemma shing (n : ℕ) (i j : fin (n+1)) (h : (j.val : fin (n+2)) < (i.val.succ : fin (n+2))) : 
-    j.val < i.val.succ :=
-begin
-  change (j.val : fin (n+2)).val < (i.val.succ : fin (n+2)).val at h,
-  rwa [fin.coe_val_of_lt (show j.1 < n + 2, by linarith [j.2]),
-       fin.coe_val_of_lt (show i.1 + 1 < n + 2, by linarith [i.2])] at h,
-end
-
 lemma fin_le_last_val (n : ℕ) : ∀ i : fin (n + 2), i ≤ (n+1) :=
 begin
     intro i,
@@ -91,10 +82,12 @@ begin
     rw h2 at hi2, linarith,
     -- case j < (i+1) is not possible because i < j
     exfalso, 
-        have h3n : (j : ℕ) < ((i + 1) : ℕ), 
+        have h3n : (j : ℕ) < ((i + 1) : ℕ), {
             norm_num at h3,
-            have m3 := shing n i j h3, exact m3,
-            --have m3 := shing n i j h3, exact m3,
+            change (j.val : fin (n+2)).val < (i.val.succ : fin (n+2)).val at h3,
+            rwa [fin.coe_val_of_lt (show j.1 < n + 2, by linarith [j.2]),
+                fin.coe_val_of_lt (show i.1 + 1 < n + 2, by linarith [i.2])] at h3, 
+            },
         have gf1 := nat.lt_succ_iff.mp h3n,
         --strange as it looks, linarith still needs this
         have hijn : (i : ℕ) < (j : ℕ), exact hij,
@@ -107,8 +100,7 @@ begin
     have g2 := (strict_mono.le_iff_le hx).mpr (@fin.zero_le (n+1) i), 
     linarith,
     cases g0 with g01 g02,
-    have g03 := fin_le_last_val n (i+1),
-    have g3 := (strict_mono.le_iff_le hx).mpr g03,
+    have g03 := (strict_mono.le_iff_le hx).mpr (fin_le_last_val n (i+1)),
     linarith, done
 end
 
@@ -157,7 +149,7 @@ begin
         have hdg := hd xp hxpx g hder, clear hd,
         have H1 : ∀ i, g (xp i) = 0, 
             intro i,
-            have H10 := hxpi i, cases H10 with H101 H102, exact H102,  
+            exact (hxpi i).2,  
         have G := hdg H1,
         have K : iterated_deriv (d.succ + 1) f = iterated_deriv d.succ g,
             apply iterated_deriv_succ',
