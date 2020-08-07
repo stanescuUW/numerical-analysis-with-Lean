@@ -26,26 +26,6 @@ begin
     exact h3,
 end
 
-lemma fin_le_last_val_2 (n : ℕ) : ∀ i : fin (n + 2), i ≤ (n+1) :=
-begin
-  intro i,
-  change i.val ≤ ((_ + _) : fin (n+2)).val,
-  norm_cast,
-  have := i.2,
-  rw fin.coe_val_of_lt; omega
-end
-
-lemma fin_zero_le_any_val (n : ℕ) : ∀ i : fin (n + 2), 0 ≤ i :=
-begin
-    intro i,
-    have j0 : 0 < n + 1 + 1, linarith,
-    have j0 := @fin.coe_val_of_lt (n+1) 0 j0,
-    have h3 : 0 ≤ i.val, linarith,
-    apply fin.le_iff_val_le_val.mpr,
-    rw ← j0 at h3,
-    exact h3,
-end
-
 -- Again thanks to Shing Tak Lam
 lemma fin_lt_succ (n : ℕ) (i : fin (n + 1)) : (i : fin (n+2)) < (i+1) :=
 begin
@@ -91,7 +71,7 @@ begin
             intros z hz,
             cases hz with hz1 hz2,
             split,
-            have g3 := (strict_mono.le_iff_le hx).mpr (fin_zero_le_any_val n i),
+            have g3 := (strict_mono.le_iff_le hx).mpr (fin.zero_le i),
             linarith, -- use strict_mono x
             have h020 := fin_le_last_val n (i+1), 
             have g3 := (strict_mono.le_iff_le hx).mpr h020,
