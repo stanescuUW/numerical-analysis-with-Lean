@@ -83,8 +83,7 @@ begin
     choose xp hxp using h1, 
     use xp, split,
     intros i j hij,
-    have hi := (hxp i).1, have hj := (hxp j).1,
-    cases hi with hi1 hi2, cases hj with hj1 hj2,
+    cases (hxp i).1 with hi1 hi2, cases (hxp j).1 with hj1 hj2,
     rcases lt_trichotomy ((i+1) : fin (n+2) ) (j : fin (n+2)) with h1|h2|h3,
     -- case (i+1) < j
     have hii1 := hx h1, linarith, 
@@ -95,6 +94,7 @@ begin
         have h3n : (j : ℕ) < ((i + 1) : ℕ), 
             norm_num at h3,
             have m3 := shing n i j h3, exact m3,
+            --have m3 := shing n i j h3, exact m3,
         have gf1 := nat.lt_succ_iff.mp h3n,
         --strange as it looks, linarith still needs this
         have hijn : (i : ℕ) < (j : ℕ), exact hij,
@@ -104,9 +104,7 @@ begin
     have g0 := (hxp i).1,
     split,
     cases g0 with g01 g02,
-    have g1 : (0 : fin (n+2))  ≤ (i : fin (n+2) ), 
-        apply fin.le_iff_val_le_val.mpr, exact zero_le _,
-    have g2 := (strict_mono.le_iff_le hx).mpr g1, 
+    have g2 := (strict_mono.le_iff_le hx).mpr (@fin.zero_le (n+1) i), 
     linarith,
     cases g0 with g01 g02,
     have g03 := fin_le_last_val n (i+1),
