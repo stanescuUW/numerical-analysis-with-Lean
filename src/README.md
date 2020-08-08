@@ -1,3 +1,5 @@
 # The main directory for Lean codes.
 
-For now only a proof of the convergence of Newton's method.
+For now only:
+1) A proof of the convergence of Newton's method to find root of f(x) = x^2 - 2.
+2) A proof of the generalized Rolle theorem.
