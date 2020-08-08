@@ -28,7 +28,7 @@ begin
 end
 
 -- Result below thanks to Sebastien Gouezel
-lemma sgouezel 
+lemma times_cont_diff_on_succ_iff_deriv_within_of_Ioo 
     (a b : ℝ) (f : ℝ → ℝ) (n : ℕ) (hf : times_cont_diff_on ℝ (n+1) f (Ioo a b) ) :
     times_cont_diff_on ℝ n (deriv f) (Ioo a b) :=
 begin
@@ -136,7 +136,7 @@ begin
             have hf11 : Ioo (x 0) (x (d.succ + 1)) ⊆ Icc (x 0) (x (d.succ + 1)), 
                 exact Ioo_subset_Icc_self,
             exact times_cont_diff_on.mono hf hf11,
-        have hder0 := sgouezel (x 0) (x (d.succ +1)) f d hf1,
+        have hder0 := times_cont_diff_on_succ_iff_deriv_within_of_Ioo (x 0) (x (d.succ +1)) f d hf1,
         have hder : times_cont_diff_on ℝ d g (Icc (xp 0) (xp (d+1))),
             have hdr0 : Icc (xp 0) (xp (d+1)) ⊆ Ioo (x 0) (x (d.succ + 1)), 
                 intros z hz,

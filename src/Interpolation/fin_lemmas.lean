@@ -40,6 +40,16 @@ begin
   rw fin.coe_val_of_lt; omega
 end
 
+lemma fin_le_last_val_v3 (n : ℕ) (i : fin (n + 1)) : i ≤ n :=
+begin
+  have h1 := fin.le_last i,
+  have h01 := @fin.coe_last n,
+  have h2 := fin.last_val n,
+  have h3 := (fin.le_iff_val_le_val).mp h1,
+  rw h2 at h3, sorry,
+end
+
+
 -- This is very particular, only needed in my own proof
 -- This is courtesy Shing Tak Lam
 lemma shing (n : ℕ) (i j : fin (n+1)) (h : (j.val : fin (n+2)) < (i.val.succ : fin (n+2))) : 
