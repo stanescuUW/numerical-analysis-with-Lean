@@ -17,9 +17,8 @@ lemma fin_zero_le_any_val_v1 (n : ℕ) (i : fin (n + 1)) : 0 ≤ i :=
 fin.le_iff_val_le_val.mpr $ nat.zero_le _
 
 -- This exists in mathlib, but in a form that is not immediately useful
-lemma fin_le_last_val (n : ℕ) : ∀ i : fin (n + 2), i ≤ (n+1) :=
+lemma fin_le_last_val (n : ℕ) (i : fin (n + 2)) :  i ≤ (n+1) :=
 begin
-    intro i,
     have j0 : n + 1 < n + 1 + 1, linarith,
     have j0 := @fin.coe_val_of_lt (n+1) (n+1) j0,
     have h3 : i.val ≤ n + 1, linarith [i.is_lt],
@@ -40,6 +39,7 @@ begin
   rw fin.coe_val_of_lt; omega
 end
 
+/-- I'd also like to obtain the result this way
 lemma fin_le_last_val_v3 (n : ℕ) (i : fin (n + 1)) : i ≤ n :=
 begin
   have h1 := fin.le_last i,
@@ -48,6 +48,7 @@ begin
   have h3 := (fin.le_iff_val_le_val).mp h1,
   rw h2 at h3, sorry,
 end
+-/
 
 
 -- This is very particular, only needed in my own proof

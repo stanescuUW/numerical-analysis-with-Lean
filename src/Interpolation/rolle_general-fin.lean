@@ -2,32 +2,14 @@ import analysis.calculus.local_extr
 import analysis.calculus.times_cont_diff
 import analysis.calculus.iterated_deriv
 import tactic data.fin
+import .fin_lemmas
 open set
 
 namespace rolle_general
 
-lemma fin_le_last_val (n : ℕ) : ∀ i : fin (n + 2), i ≤ (n+1) :=
-begin
-    intro i,
-    have j0 : n + 1 < n + 1 + 1, linarith,
-    have j0 := @fin.coe_val_of_lt (n+1) (n+1) j0,
-    have h3 : i.val ≤ n + 1, linarith [i.is_lt],
-    apply fin.le_iff_val_le_val.mpr,
-    rw ← j0 at h3,
-    exact h3,
-end
-
--- Again thanks to Shing Tak Lam
-lemma fin_lt_succ (n : ℕ) (i : fin (n + 1)) : (i : fin (n+2)) < (i+1) :=
-begin
-  cases i with i hi,
-  change (_ : fin (n+2)).val < (_ : fin (n+2)).val,
-  simp only [fin.coe_mk, coe_coe],
-  norm_cast,
-  rw [fin.coe_val_of_lt, fin.coe_val_of_lt]; omega,
-end
 
 -- Result below thanks to Sebastien Gouezel
+-- It will be added to mathlib in a more general form
 lemma times_cont_diff_on_succ_iff_deriv_within_of_Ioo 
     (a b : ℝ) (f : ℝ → ℝ) (n : ℕ) (hf : times_cont_diff_on ℝ (n+1) f (Ioo a b) ) :
     times_cont_diff_on ℝ n (deriv f) (Ioo a b) :=
@@ -45,7 +27,9 @@ begin
   exact (is_bounded_bilinear_map_apply.is_bounded_linear_map_left _).times_cont_diff
 end
 
-lemma one_step (n : ℕ) (x : fin (n+2) → ℝ) (hx : strict_mono x) :
+-- This constructs the sequence of points where the derivative is zero
+-- given points where the function is zero (repeated standard Rolle application) 
+lemma exist_points_deriv (n : ℕ) (x : fin (n+2) → ℝ) (hx : strict_mono x) :
     ∀ (f : ℝ → ℝ), continuous_on f ( Icc (x 0) (x (n+1)) ) → 
     (∀ i, f (x i) = 0)  →
     ∃ (xp : fin(n+1) → ℝ), strict_mono xp ∧ 
@@ -129,7 +113,7 @@ begin
         -- the derivative is in Cᵈ
         intros f hf hi,
         have hfc := times_cont_diff_on.continuous_on hf,
-        have H := one_step d.succ x hx f hfc hi,
+        have H := exist_points_deriv d.succ x hx f hfc hi,
         cases H with xp hxp, cases hxp with hxpx hxpi,
         set g := deriv f with hg,
         have hf1 : times_cont_diff_on ℝ d.succ f (Ioo (x 0) (x (d.succ+1))),
