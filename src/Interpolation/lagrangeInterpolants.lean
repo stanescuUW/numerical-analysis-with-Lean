@@ -20,6 +20,8 @@ begin
     norm_num, done
 end
 
+-- The basic building block in the Lagrange polynomial
+-- this is (x - b)/(a - b)
 def scaled_binomial (a b : ℝ) : polynomial ℝ := 
     ((1 : ℝ)/(a - b)) • (polynomial.X - polynomial.C b)
 
@@ -40,9 +42,58 @@ begin
     exact div_mul_cancel 1 h1, done
 end
 
--- Maybe even better, working with `smul`? Maybe not!
-def lagrange_interpolant_v4 (n : ℕ) (i : ℕ) (xData : ℕ → ℝ): polynomial ℝ :=
+-- This version, using scalar multiplication (`smul`) seems simplest.
+def lagrange_interpolant (n : ℕ) (i : ℕ) (xData : ℕ → ℝ): polynomial ℝ :=
     ∏ j in ( finset.range (n+1) \ {i} ), scaled_binomial (xData i) (xData j) 
+
+-- Must show that one can commute polynomial.eval with finset.prod
+-- So a lemma like this would be useful
+lemma eval_comm_prod (j n : ℕ) (pj : ℕ → polynomial ℝ) (x : ℝ):
+    polynomial.eval x ( ∏ j in finset.range n, pj j) = 
+    ∏ j in finset.range n, polynomial.eval x (pj j) :=
+begin
+    induction n with d hd,
+    { -- base case n = 0
+        rw finset.prod_range_zero _,
+        rw finset.prod_range_zero _,
+        rw polynomial.eval_one,
+    },
+    { -- induction step
+        rw finset.prod_range_succ,
+        rw polynomial.eval_mul,
+        rw hd,
+        rw finset.prod_range_succ,
+    },
+    done
+end
+
+-- The Lagrange interpolant `Lᵢ x` is one for `x = xData i` 
+@[simp]
+lemma lagrange_interpolant_one (n : ℕ) (xData : ℕ → ℝ) (i : ℕ) (hi: i ∈ finset.range (n+1)) : 
+    polynomial.eval (xData i) (lagrange_interpolant n i xData)= (1:ℝ) :=
+begin
+    unfold lagrange_interpolant,
+    -- must commute polynomial.eval with finset.prod
+    --apply finset.prod_eq_one,
+    sorry,
+end
+#check finset.prod_eq_one
+#check finset.prod_induction
+#check finset.prod_range_induction
+#check finset.prod_eq_zero
+
+
+-- The Lagrange interpolant `Lᵢ x` is zero for `x = xData j, j ≠ i` 
+@[simp]
+lemma lagrange_interpolant_zero (n : ℕ) (xData : ℕ → ℝ) (i : ℕ) (hi: i ∈ finset.range (n+1)) 
+    (j : ℕ) (hj : j ∈ finset.range (n+1)) (hij : i ≠ j) : 
+    polynomial.eval (xData j) (lagrange_interpolant n i xData)= (0:ℝ) :=
+begin
+    sorry,
+end
+
+
+--------------------- Scratch space below here
 
 
 -- Maybe even better, working with `smul`? Maybe not!

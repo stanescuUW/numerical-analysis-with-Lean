@@ -48,8 +48,7 @@ begin
             split,
             have g3 := (strict_mono.le_iff_le hx).mpr (fin.zero_le i),
             linarith, -- use strict_mono x
-            have h020 := fin_le_last_val n (i+1), 
-            have g3 := (strict_mono.le_iff_le hx).mpr h020,
+            have g3 := (strict_mono.le_iff_le hx).mpr (fin_le_last_val n (i+1)),
             linarith,
         exact continuous_on.mono hf h02,
         -- show f (x i) = f (x (i+1))
@@ -78,13 +77,12 @@ begin
         linarith,
     intro i, split,
     swap, exact (hxp i).2,
-    have g0 := (hxp i).1,
     split,
-    cases g0 with g01 g02,
-    have g2 := (strict_mono.le_iff_le hx).mpr (@fin.zero_le (n+1) i), 
+    cases ((hxp i).1) with g01 g02,
+    have := (strict_mono.le_iff_le hx).mpr (@fin.zero_le (n+1) i), 
     linarith,
-    cases g0 with g01 g02,
-    have g03 := (strict_mono.le_iff_le hx).mpr (fin_le_last_val n (i+1)),
+    cases ((hxp i).1) with g01 g02,
+    have := (strict_mono.le_iff_le hx).mpr (fin_le_last_val n (i+1)),
     linarith, done
 end
 
@@ -99,7 +97,7 @@ begin
         norm_cast at hf,
         rw times_cont_diff_on_zero at hf,
         have h1 : 0 < 1, linarith,
-        -- The above was needed because linarith fails on next one:
+        -- ?? The above was needed because linarith fails on next one without it:
         have h2 : (0 : fin 2) < (1 : fin 2), exact h1, -- linarith fails !!!???
         have hx01 := hx h2, clear h1, clear h2,
         have heq : f (x 0) = f (x 1), rw [hi 0, hi 1],
@@ -114,7 +112,8 @@ begin
         intros f hf hi,
         have hfc := times_cont_diff_on.continuous_on hf,
         have H := exist_points_deriv d.succ x hx f hfc hi,
-        cases H with xp hxp, cases hxp with hxpx hxpi,
+        --cases H with xp hxp, cases hxp with hxpx hxpi,
+        rcases H with ⟨ xp, ⟨ hxpx, hxpi ⟩ ⟩, 
         set g := deriv f with hg,
         have hf1 : times_cont_diff_on ℝ d.succ f (Ioo (x 0) (x (d.succ+1))),
             have hf11 : Ioo (x 0) (x (d.succ + 1)) ⊆ Icc (x 0) (x (d.succ + 1)), 
@@ -138,12 +137,10 @@ begin
         have K : iterated_deriv (d.succ + 1) f = iterated_deriv d.succ g,
             apply iterated_deriv_succ',
         rw ← K at G,
-        cases G with c hc,
+        rcases G with ⟨ c, ⟨ ⟨hc10, hc11⟩, hc2 ⟩ ⟩,
         use c,
-        cases hc with hc1 hc2,
         split, swap, exact hc2,
         have hxp0 := (hxpi 0).1, cases hxp0 with hxp01 hxp02,
-        cases hc1 with hc10 hc11,
         split, linarith,
         have hxp1 := (hxpi d.succ).1, cases hxp1 with hxp11 hxp12,
         have hxpeq0 : d+1 = d.succ, rw nat.succ_eq_add_one,
