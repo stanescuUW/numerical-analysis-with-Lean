@@ -113,7 +113,6 @@ def lagrange_interpolant_v1 (n : ℕ) (i : fin (n+1) ) (xData : fin (n+1) → �
 
 
 
---------- Scratch space below here: -----------------------
 -- Check that I can work with this definition
 def myX : ℕ → ℝ 
 | 0     := (1 : ℝ)
@@ -160,9 +159,9 @@ begin
 end
 @[simp] lemma finset_range_20 : finset.range 2 \ {0} = {1} := dec_trivial -- wow!
 
-example : polynomial.eval (1 : ℝ) (lagrange_interpolant_v4 1 0 myX) = 1 :=
+example : polynomial.eval (1 : ℝ) (lagrange_interpolant 1 0 myX) = 1 :=
 begin
-    unfold lagrange_interpolant_v4,
+    unfold lagrange_interpolant,
     simp * at *, -- still doesn't use the simp lemmas for scaled_binomial
     have h : (1:ℝ) ≠ 2, linarith,
     exact bin_one 1 2 h,
