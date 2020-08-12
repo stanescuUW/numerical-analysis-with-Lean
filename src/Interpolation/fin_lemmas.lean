@@ -39,15 +39,28 @@ begin
   rw fin.coe_val_of_lt; omega
 end
 
-/-- I'd also like to obtain the result this way
+/- I'd also like to obtain the result this way 
+
 lemma fin_le_last_val_v3 (n : ℕ) (i : fin (n + 1)) : i ≤ n :=
 begin
   have h1 := fin.le_last i,
   have h01 := @fin.coe_last n,
   have h2 := fin.last_val n,
   have h3 := (fin.le_iff_val_le_val).mp h1,
-  rw h2 at h3, sorry,
+  rw h2 at h3,
+  obtain ⟨i, hi ⟩ := i, sorry
 end
+
+example {n : ℕ} (i j : fin n) (h : i < j) :
+  n = ↑i + (↑j - ↑i + 1 + (n - 1 - ↑j)) :=
+begin
+  cases i,
+  cases j,
+  dsimp,
+  change i_val < j_val at h,
+  omega, done
+end
+
 -/
 
 
