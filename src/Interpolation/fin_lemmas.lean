@@ -84,3 +84,27 @@ begin
   rw [fin.coe_val_of_lt, fin.coe_val_of_lt]; omega,
 end
 
+-- Some `fin` lemmas from Y. Pechersky
+lemma fin.coe_succ_eq_succ {n : ℕ} (i : fin n) : ((i : fin (n + 1)) + 1) = i.succ :=
+begin
+  rw [fin.eq_iff_veq, fin.succ_val, coe_coe],
+  norm_cast,
+  apply fin.coe_coe_of_lt,
+  exact add_lt_add_right i.is_lt 1
+end
+
+lemma fin.coe_eq_cast_succ {n : ℕ} (i : fin n) : (i : fin (n + 1)) = i.cast_succ :=
+begin
+  rw [fin.cast_succ, fin.cast_add, fin.cast_le, fin.cast_lt],
+  obtain ⟨i, hi⟩ := i,
+  rw fin.eq_iff_veq,
+  have : i.succ = i + 1 := rfl,
+  simp only [this],
+  apply fin.coe_val_of_lt,
+  exact nat.lt.step hi,
+end
+
+lemma fin.val_coe_eq_self {n : ℕ} (i : fin n) : (i : fin (n + 1)).val = i.val :=
+by { rw fin.coe_eq_cast_succ, refl }
+
+
