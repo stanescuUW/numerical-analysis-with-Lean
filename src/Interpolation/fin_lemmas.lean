@@ -39,6 +39,15 @@ begin
   rw fin.coe_val_of_lt; omega
 end
 
+-- Another version with a better name from Y. Pechersky
+lemma fin.le_coe_last {n : ℕ} (i : fin (n + 1)) : i ≤ n :=
+begin
+  rw [fin.le_def, <-nat.lt_succ_iff, fin.coe_val_of_lt (lt_add_one n)],
+  exact i.is_lt,
+end
+
+
+
 /- I'd also like to obtain the result this way 
 
 lemma fin_le_last_val_v3 (n : ℕ) (i : fin (n + 1)) : i ≤ n :=
@@ -106,5 +115,14 @@ end
 
 lemma fin.val_coe_eq_self {n : ℕ} (i : fin n) : (i : fin (n + 1)).val = i.val :=
 by { rw fin.coe_eq_cast_succ, refl }
+
+lemma fin.lt_succ {n : ℕ} (i : fin n) : (i : fin (n + 1)) < i.succ :=
+begin
+  rw [fin.coe_eq_cast_succ, fin.cast_succ, fin.lt_iff_val_lt_val, fin.cast_add_val, fin.succ_val],
+  exact lt_add_one i.val
+end
+
+lemma fin_lt_succ' (n : ℕ) (i : fin (n + 1)) : (i : fin (n + 2)) < (i + 1) :=
+by { rw fin.coe_succ_eq_succ, exact fin.lt_succ _ }
 
 
