@@ -48,7 +48,7 @@ def lagrange_interpolant (n : ℕ) (i : ℕ) (xData : ℕ → ℝ): polynomial �
 
 -- Must show that one can commute polynomial.eval with finset.prod
 -- So a lemma like this would be useful
-lemma eval_comm_prod (j n : ℕ) (pj : ℕ → polynomial ℝ) (x : ℝ):
+lemma eval_comm_prod (n : ℕ) (pj : ℕ → polynomial ℝ) (x : ℝ):
     polynomial.eval x ( ∏ j in finset.range n, pj j) = 
     ∏ j in finset.range n, polynomial.eval x (pj j) :=
 begin
