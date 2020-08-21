@@ -48,23 +48,35 @@ def lagrange_interpolant (n : ℕ) (i : ℕ) (xData : ℕ → ℝ): polynomial �
 
 -- Must show that one can commute polynomial.eval with finset.prod
 -- So a lemma like this would be useful
-lemma eval_comm_prod (n : ℕ) (pj : ℕ → polynomial ℝ) (x : ℝ):
+lemma eval_comm_prod (n : ℕ) (pj : ℕ → polynomial ℝ) (x : ℝ) :
     polynomial.eval x ( ∏ j in finset.range n, pj j) = 
     ∏ j in finset.range n, polynomial.eval x (pj j) :=
 begin
     induction n with d hd,
     { -- base case n = 0
-        rw finset.prod_range_zero _,
-        rw finset.prod_range_zero _,
+        repeat { rw finset.prod_range_zero _ },
         rw polynomial.eval_one,
     },
     { -- induction step
-        rw finset.prod_range_succ,
-        rw polynomial.eval_mul,
-        rw hd,
-        rw finset.prod_range_succ,
+        rw [finset.prod_range_succ, polynomial.eval_mul, hd, finset.prod_range_succ  ],
     },
     done
+end
+
+variables  {ι : Type*} [decidable_eq ι]
+
+lemma polynomial.eval_finset.prod (s : finset ι) (p : ι → polynomial ℝ) (x : ℝ) :
+  polynomial.eval x (∏ j in s, p j) = ∏ j in s, polynomial.eval x (p j) :=
+begin
+    apply finset.induction_on s,
+    { repeat {rw finset.prod_empty}, rw polynomial.eval_one, },
+    intros j s hj hpj,
+    have h0 : ∏ i in insert j s, polynomial.eval x (p i) = 
+            (polynomial.eval x (p j)) * ∏ i in s, polynomial.eval x (p i),
+    apply finset.prod_insert hj,
+    rw [h0, ← hpj], 
+    rw finset.prod_insert hj,
+    rw polynomial.eval_mul, done
 end
 
 -- The Lagrange interpolant `Lᵢ x` is one for `x = xData i` 
