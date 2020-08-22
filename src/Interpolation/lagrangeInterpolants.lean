@@ -43,7 +43,7 @@ begin
 end
 
 -- This version, using scalar multiplication (`smul`) seems simplest.
-def lagrange_interpolant (n : ℕ) (i : ℕ) (xData : ℕ → ℝ): polynomial ℝ :=
+def lagrange_interpolant (n : ℕ) (i : ℕ) (xData : ℕ → ℝ) : polynomial ℝ :=
     ∏ j in ( finset.range (n+1) \ {i} ), scaled_binomial (xData i) (xData j) 
 
 -- Must show that one can commute polynomial.eval with finset.prod
@@ -63,17 +63,18 @@ begin
     done
 end
 
+-- A more general version of the above
+-- This has been PR'd into mathlib
 variables  {ι : Type*} [decidable_eq ι]
-
 lemma polynomial.eval_finset.prod (s : finset ι) (p : ι → polynomial ℝ) (x : ℝ) :
   polynomial.eval x (∏ j in s, p j) = ∏ j in s, polynomial.eval x (p j) :=
 begin
     apply finset.induction_on s,
-    { repeat {rw finset.prod_empty}, rw polynomial.eval_one, },
+    { repeat {rw finset.prod_empty}, rw polynomial.eval_one },
     intros j s hj hpj,
     have h0 : ∏ i in insert j s, polynomial.eval x (p i) = 
             (polynomial.eval x (p j)) * ∏ i in s, polynomial.eval x (p i),
-    apply finset.prod_insert hj,
+    { apply finset.prod_insert hj },
     rw [h0, ← hpj], 
     rw finset.prod_insert hj,
     rw polynomial.eval_mul, done
@@ -81,25 +82,30 @@ end
 
 -- The Lagrange interpolant `Lᵢ x` is one for `x = xData i` 
 @[simp]
-lemma lagrange_interpolant_one (n : ℕ) (xData : ℕ → ℝ) (i : ℕ) (hi: i ∈ finset.range (n+1)) : 
+lemma lagrange_interpolant_one (n : ℕ) (xData : ℕ → ℝ) (i : ℕ) (hi: i ∈ finset.range (n+1)) 
+    (hne : ∀ (i j : ℕ), i ≠ j → xData i ≠ xData j) : 
     polynomial.eval (xData i) (lagrange_interpolant n i xData)= (1:ℝ) :=
 begin
     unfold lagrange_interpolant,
-    -- must commute polynomial.eval with finset.prod
-    --apply finset.prod_eq_one,
-    sorry,
+    rw polynomial.eval_finset.prod,
+    --simp only [bin_one], -- simp fails, need better lemma
+    apply finset.prod_eq_one,
+    intros j hj,
+    have h0 : i ≠ j, 
+        { intro heq, rw heq at hj, 
+          rw [finset.mem_sdiff, finset.mem_singleton] at hj,
+          exact hj.2 rfl 
+        },
+    exact bin_one (xData i) (xData j) (hne i j h0),
+    done
 end
-#check finset.prod_eq_one
-#check finset.prod_induction
-#check finset.prod_range_induction
-#check finset.prod_eq_zero
-
 
 -- The Lagrange interpolant `Lᵢ x` is zero for `x = xData j, j ≠ i` 
 @[simp]
 lemma lagrange_interpolant_zero (n : ℕ) (xData : ℕ → ℝ) (i : ℕ) (hi: i ∈ finset.range (n+1)) 
-    (j : ℕ) (hj : j ∈ finset.range (n+1)) (hij : i ≠ j) : 
-    polynomial.eval (xData j) (lagrange_interpolant n i xData)= (0:ℝ) :=
+    (j : ℕ) (hj : j ∈ finset.range (n+1)) (hij : i ≠ j) 
+    (hne : ∀ (i j : ℕ), i ≠ j → xData i ≠ xData j) : 
+    polynomial.eval (xData j) (lagrange_interpolant n i xData) = (0:ℝ) :=
 begin
     sorry,
 end
