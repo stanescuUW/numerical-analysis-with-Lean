@@ -4,21 +4,6 @@ import algebra.big_operators
 
 noncomputable theory
 open_locale big_operators
---open classical
---open polynomial
---def test (a:ℝ ):polynomial ℝ := C a * X
-
--- These will be useful for defining the Lagrange polynomials
-def binomial_R (a : ℝ) : polynomial ℝ := polynomial.X - polynomial.C a
--- To work with their values use this technique:
-example : polynomial.eval (5 : ℝ) (binomial_R (2:ℝ)) = 3 :=
-begin
-    unfold binomial_R,  -- otherwise can't rw below
-    rw polynomial.eval_sub,
-    rw polynomial.eval_C,
-    rw polynomial.eval_X,
-    norm_num, done
-end
 
 -- The basic building block in the Lagrange polynomial
 -- this is (x - b)/(a - b)
@@ -43,27 +28,10 @@ begin
 end
 
 -- This version, using scalar multiplication (`smul`) seems simplest.
+-- Must add hypothesis that data points are distinct
 def lagrange_interpolant (n : ℕ) (i : ℕ) (xData : ℕ → ℝ) : polynomial ℝ :=
     ∏ j in ( finset.range (n+1) \ {i} ), scaled_binomial (xData i) (xData j) 
 
--- Must show that one can commute polynomial.eval with finset.prod
--- So a lemma like this would be useful
-lemma eval_comm_prod (n : ℕ) (pj : ℕ → polynomial ℝ) (x : ℝ) :
-    polynomial.eval x ( ∏ j in finset.range n, pj j) = 
-    ∏ j in finset.range n, polynomial.eval x (pj j) :=
-begin
-    induction n with d hd,
-    { -- base case n = 0
-        repeat { rw finset.prod_range_zero _ },
-        rw polynomial.eval_one,
-    },
-    { -- induction step
-        rw [finset.prod_range_succ, polynomial.eval_mul, hd, finset.prod_range_succ  ],
-    },
-    done
-end
-
--- A more general version of the above
 -- This has been PR'd into mathlib
 variables  {ι : Type*} [decidable_eq ι]
 lemma polynomial.eval_finset.prod (s : finset ι) (p : ι → polynomial ℝ) (x : ℝ) :
@@ -113,6 +81,36 @@ end
 
 --------------------- Scratch space below here
 
+#eval (∑ k in ((finset.range 5) \ {0}), k)
+
+-- These will be useful for defining the Lagrange polynomials
+def binomial_R (a : ℝ) : polynomial ℝ := polynomial.X - polynomial.C a
+-- To work with their values use this technique:
+example : polynomial.eval (5 : ℝ) (binomial_R (2:ℝ)) = 3 :=
+begin
+    unfold binomial_R,  -- otherwise can't rw below
+    rw polynomial.eval_sub,
+    rw polynomial.eval_C,
+    rw polynomial.eval_X,
+    norm_num, done
+end
+
+-- Must show that one can commute polynomial.eval with finset.prod
+-- So a lemma like this would be useful
+lemma eval_comm_prod (n : ℕ) (pj : ℕ → polynomial ℝ) (x : ℝ) :
+    polynomial.eval x ( ∏ j in finset.range n, pj j) = 
+    ∏ j in finset.range n, polynomial.eval x (pj j) :=
+begin
+    induction n with d hd,
+    { -- base case n = 0
+        repeat { rw finset.prod_range_zero _ },
+        rw polynomial.eval_one,
+    },
+    { -- induction step
+        rw [finset.prod_range_succ, polynomial.eval_mul, hd, finset.prod_range_succ  ],
+    },
+    done
+end
 
 -- Maybe even better, working with `smul`? Maybe not!
 def lagrange_interpolant_v3 (n : ℕ) (i : ℕ) (xData : ℕ → ℝ): polynomial ℝ :=

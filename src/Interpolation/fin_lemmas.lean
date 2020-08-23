@@ -125,4 +125,22 @@ end
 lemma fin_lt_succ' (n : ℕ) (i : fin (n + 1)) : (i : fin (n + 2)) < (i + 1) :=
 by { rw fin.coe_succ_eq_succ, exact fin.lt_succ _ }
 
+-- Lemmas from Y. Kudryashov
+@[simp] lemma mk_zero (n : ℕ) : (⟨0, n.zero_lt_succ⟩ : fin (n + 1)) = 0 := rfl
+
+@[simp] lemma mk_one (n : ℕ) (hn : 1 < n + 1) : (⟨1, hn⟩ : fin (n + 1)) = 1 :=
+fin.eq_of_veq (nat.mod_eq_of_lt hn).symm
+
+@[simp] lemma mk_bit0 {m n : ℕ} (h : bit0 m < n) :
+  (⟨_, h⟩ : fin n) = bit0 ⟨m, (nat.le_add_right _ _).trans_lt h⟩ :=
+fin.eq_of_veq (nat.mod_eq_of_lt h).symm
+
+@[simp] lemma mk_bit1 {m n : ℕ} (h : bit1 m < n + 1) :
+  (⟨bit1 m, h⟩ : fin (n + 1)) = bit1 ⟨m, (nat.le_add_right m m).trans_lt
+    ((m + m).lt_succ_self.trans h)⟩ :=
+begin
+  ext,
+  simp only [bit1, bit0] at h ⊢,
+  simp only [fin.val_add, fin.one_val, ← nat.add_mod, nat.mod_eq_of_lt h]
+end
 
