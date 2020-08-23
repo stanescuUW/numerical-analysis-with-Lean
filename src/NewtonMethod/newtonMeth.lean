@@ -30,8 +30,7 @@ begin
     have h3 : 0 < X * X, nlinarith,
     have h4 : 0 < X * X + 2, linarith,
     have h5 : 0 < 2 * X, linarith,
-    have h6 := div_pos_of_pos_of_pos h4 h5, 
-    exact h6,
+    exact div_pos h4 h5, 
   }, 
   done
 end
